@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -89,6 +88,10 @@
   .completion-particles {
     @apply absolute w-1 h-1 rounded-full bg-solo-purple;
     animation: particle-fade 0.8s forwards;
+  }
+  
+  .shadow-glow {
+    box-shadow: 0 0 8px 2px rgba(139, 92, 246, 0.3);
   }
 }
 

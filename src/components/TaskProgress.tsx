@@ -1,7 +1,9 @@
 
 import { useEffect, useState } from 'react';
 import { Task } from '@/utils/taskUtils';
-import { BarChart, Bar, XAxis, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { Trophy, CheckCircle2, CircleDot } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface TaskProgressProps {
   tasks: Task[];
@@ -47,56 +49,94 @@ const TaskProgress = ({ tasks }: TaskProgressProps) => {
   
   if (tasks.length === 0) return null;
   
+  // Color variations for different categories
+  const getCategoryColor = (index: number) => {
+    const colors = [
+      'from-purple-500 to-indigo-600',
+      'from-cyan-500 to-blue-600',
+      'from-pink-500 to-rose-600',
+      'from-amber-500 to-orange-600',
+      'from-emerald-500 to-teal-600',
+    ];
+    
+    return colors[index % colors.length];
+  };
+  
   return (
     <div className="glassmorphism p-6 mb-8 w-full max-w-2xl mx-auto">
       <h3 className="text-xl font-bold text-white mb-4">Progress Overview</h3>
       
-      <div className="h-64">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart
-            data={data}
-            margin={{ top: 10, right: 10, left: 10, bottom: 30 }}
-          >
-            <XAxis 
-              dataKey="name" 
-              tick={{ fill: '#8E9196' }}
-              axisLine={{ stroke: '#403E43' }}
-              tickLine={{ stroke: '#403E43' }}
-            />
-            <Tooltip
-              contentStyle={{ 
-                backgroundColor: '#1A1F2C', 
-                border: '1px solid rgba(155, 135, 245, 0.2)', 
-                borderRadius: '0.5rem' 
-              }}
-              itemStyle={{ color: '#9b87f5' }}
-              labelStyle={{ color: 'white' }}
-            />
-            <Bar 
-              dataKey="total" 
-              fill="#403E43" 
-              radius={[4, 4, 0, 0]}
-            />
-            <Bar 
-              dataKey="completed" 
-              radius={[4, 4, 0, 0]}
-            >
-              {data.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill="#9b87f5" />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
+      <div className="space-y-5 my-4">
+        {data.map((category, index) => {
+          const percentComplete = category.total > 0 
+            ? Math.round((category.completed / category.total) * 100) 
+            : 0;
+            
+          return (
+            <div key={category.name} className="animate-fade-in">
+              <div className="flex justify-between items-center mb-2">
+                <div className="flex items-center gap-2">
+                  {category.name === 'Challenge' ? (
+                    <Trophy className="h-5 w-5 text-amber-400" />
+                  ) : (
+                    <CircleDot className={`h-5 w-5 ${index % 2 === 0 ? 'text-purple-400' : 'text-cyan-400'}`} />
+                  )}
+                  <span className="text-white font-medium">{category.name}</span>
+                </div>
+                <div className="flex items-center gap-1 text-sm">
+                  <span className="text-white font-mono">{category.completed}</span>
+                  <span className="text-solo-gray">/</span>
+                  <span className="text-solo-gray">{category.total}</span>
+                  <span className="ml-2 text-xs bg-black/30 rounded-full px-2 py-0.5 text-white">
+                    {percentComplete}%
+                  </span>
+                </div>
+              </div>
+              
+              <div className="relative h-10 bg-black/20 rounded-lg overflow-hidden">
+                {/* Container for task dots */}
+                <div className="absolute inset-0 flex items-center px-1.5 py-1.5">
+                  {Array.from({ length: category.total }).map((_, i) => {
+                    const isCompleted = i < category.completed;
+                    
+                    return (
+                      <div 
+                        key={i} 
+                        className={cn(
+                          "flex-1 mx-0.5 h-7 rounded-md transition-all flex items-center justify-center",
+                          isCompleted 
+                            ? `bg-gradient-to-r ${getCategoryColor(index)} shadow-glow animate-pulse-blue` 
+                            : "bg-gray-700/50"
+                        )}
+                      >
+                        {isCompleted && (
+                          <CheckCircle2 className="h-4 w-4 text-white" />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
       
-      <div className="flex justify-center gap-6 mt-4">
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-solo-purple rounded-sm"></div>
-          <span className="text-sm text-solo-gray">Completed</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-solo-charcoal rounded-sm"></div>
-          <span className="text-sm text-solo-gray">Total</span>
+      {/* Summary section */}
+      <div className="mt-6 pt-4 border-t border-white/10">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="glassmorphism p-3 text-center">
+            <div className="text-3xl font-bold text-white">
+              {tasks.filter(t => t.completed).length}
+            </div>
+            <div className="text-xs text-solo-gray mt-1">Completed</div>
+          </div>
+          <div className="glassmorphism p-3 text-center">
+            <div className="text-3xl font-bold text-white">
+              {tasks.filter(t => !t.completed).length}
+            </div>
+            <div className="text-xs text-solo-gray mt-1">Remaining</div>
+          </div>
         </div>
       </div>
     </div>
