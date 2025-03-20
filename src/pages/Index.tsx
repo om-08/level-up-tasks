@@ -1,9 +1,9 @@
-
 import { useState, useEffect } from 'react';
 import RankDisplay from '@/components/RankDisplay';
 import TaskList from '@/components/TaskList';
 import AddTaskForm from '@/components/AddTaskForm';
 import TaskProgress from '@/components/TaskProgress';
+import ChallengeList from '@/components/ChallengeList';
 import { Task, deleteTask } from '@/utils/taskUtils';
 import { checkRankUp, getRankUpMessage } from '@/utils/rankUtils';
 import { useToast } from '@/components/ui/use-toast';
@@ -123,6 +123,8 @@ const Index = () => {
         <RankDisplay points={points} />
         
         <TaskProgress tasks={tasks} />
+        
+        <ChallengeList tasks={tasks} setTasks={setTasks} />
         
         <TaskList 
           tasks={tasks} 

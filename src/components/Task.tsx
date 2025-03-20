@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { Task as TaskType, toggleTaskCompletion, CATEGORIES } from '@/utils/taskUtils';
-import { CheckCircle, Circle, Trash2, AlignLeft } from 'lucide-react';
+import { CheckCircle, Circle, Trash2, AlignLeft, Award } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface TaskProps {
@@ -44,7 +44,8 @@ const Task = ({ task, tasks, setTasks, onComplete, onDelete }: TaskProps) => {
       className={cn(
         "task-card cursor-pointer animate-enter mb-4 group relative overflow-hidden",
         task.completed ? "border-solo-purple/30 opacity-70" : "",
-        showCompletionEffect ? "border-solo-purple shadow-blue-glow" : ""
+        showCompletionEffect ? "border-solo-purple shadow-blue-glow" : "",
+        task.isChallenge ? "border-l-4 border-l-solo-purple" : ""
       )}
       onClick={handleToggle}
     >
@@ -77,12 +78,17 @@ const Task = ({ task, tasks, setTasks, onComplete, onDelete }: TaskProps) => {
         <div className="flex-grow">
           <div className="flex justify-between items-start">
             <div>
-              <h3 className={cn(
-                "text-base font-medium transition-all duration-300",
-                task.completed ? "text-solo-gray line-through" : "text-white"
-              )}>
-                {task.title}
-              </h3>
+              <div className="flex items-center gap-2">
+                <h3 className={cn(
+                  "text-base font-medium transition-all duration-300",
+                  task.completed ? "text-solo-gray line-through" : "text-white"
+                )}>
+                  {task.title}
+                </h3>
+                {task.isChallenge && (
+                  <Award className="h-4 w-4 text-solo-purple" />
+                )}
+              </div>
               <div className="flex items-center mt-1 gap-2">
                 <span className="px-2 py-0.5 text-xs rounded-full bg-solo-purple/20 text-solo-purple-light">
                   {CATEGORIES[task.category as keyof typeof CATEGORIES].label}
