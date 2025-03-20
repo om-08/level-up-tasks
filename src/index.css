@@ -85,6 +85,11 @@
   .progress-fill {
     @apply h-full bg-gradient-purple rounded-full transition-all duration-700 ease-out;
   }
+  
+  .completion-particles {
+    @apply absolute w-1 h-1 rounded-full bg-solo-purple;
+    animation: particle-fade 0.8s forwards;
+  }
 }
 
 .animate-enter {
@@ -93,4 +98,28 @@
 
 .animate-exit {
   animation: fade-out 0.4s ease-out forwards;
+}
+
+@keyframes particle-fade {
+  0% {
+    transform: translate(0, 0);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--x, 0), var(--y, -40px));
+    opacity: 0;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }

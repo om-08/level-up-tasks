@@ -14,8 +14,15 @@ interface TaskProps {
 
 const Task = ({ task, tasks, setTasks, onComplete, onDelete }: TaskProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showCompletionEffect, setShowCompletionEffect] = useState(false);
   
   const handleToggle = () => {
+    if (!task.completed) {
+      // Only show effects when completing a task, not when uncompleting
+      setShowCompletionEffect(true);
+      setTimeout(() => setShowCompletionEffect(false), 1000);
+    }
+    
     const pointsChange = toggleTaskCompletion(task, tasks, setTasks);
     onComplete(pointsChange);
   };
@@ -35,15 +42,34 @@ const Task = ({ task, tasks, setTasks, onComplete, onDelete }: TaskProps) => {
   return (
     <div 
       className={cn(
-        "task-card cursor-pointer animate-enter mb-4 group",
-        task.completed ? "border-solo-purple/30 opacity-70" : ""
+        "task-card cursor-pointer animate-enter mb-4 group relative overflow-hidden",
+        task.completed ? "border-solo-purple/30 opacity-70" : "",
+        showCompletionEffect ? "border-solo-purple shadow-blue-glow" : ""
       )}
       onClick={handleToggle}
     >
-      <div className="flex items-center">
+      {showCompletionEffect && (
+        <div className="absolute inset-0 bg-solo-purple/10 animate-pulse-blue z-0"></div>
+      )}
+      
+      {showCompletionEffect && (
+        <div className="absolute inset-0 z-10">
+          <div className="absolute -inset-2 opacity-20 bg-solo-purple blur-md animate-pulse"></div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+            <div className="text-solo-purple font-bold text-xl animate-scale-in">
+              +{task.points}
+            </div>
+          </div>
+        </div>
+      )}
+      
+      <div className={cn("flex items-center relative z-20")}>
         <div className="flex-shrink-0 mr-3">
           {task.completed ? (
-            <CheckCircle className="h-6 w-6 text-solo-purple transition-all duration-300" />
+            <CheckCircle className={cn(
+              "h-6 w-6 text-solo-purple transition-all duration-300",
+              showCompletionEffect ? "scale-125" : ""
+            )} />
           ) : (
             <Circle className="h-6 w-6 text-solo-gray group-hover:text-solo-purple transition-all duration-300" />
           )}
