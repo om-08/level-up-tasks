@@ -62,8 +62,14 @@ const ChallengeList = ({ tasks, setTasks }: ChallengeListProps) => {
                     key={index}
                     className={cn(
                       "task-card p-3 border-solo-purple/20",
-                      isAlreadyAdded ? "opacity-50" : "hover:border-solo-purple/50"
+                      isAlreadyAdded ? "opacity-50" : "hover:border-solo-purple/50 cursor-pointer"
                     )}
+                    onClick={(e) => {
+                      if (!isAlreadyAdded) {
+                        e.stopPropagation();
+                        handleAddChallenge(challenge);
+                      }
+                    }}
                   >
                     <div className="flex justify-between items-start">
                       <div>
@@ -86,6 +92,7 @@ const ChallengeList = ({ tasks, setTasks }: ChallengeListProps) => {
                             handleAddChallenge(challenge);
                           }}
                           className="p-1.5 rounded-full hover:bg-white/5 transition-colors"
+                          aria-label="Add challenge"
                         >
                           <PlusCircle className="h-5 w-5 text-solo-purple" />
                         </button>
