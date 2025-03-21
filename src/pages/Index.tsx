@@ -10,6 +10,8 @@ import { checkRankUp, getRankUpMessage, checkRankDown, getRankDownMessage } from
 import { useToast } from '@/components/ui/use-toast';
 import { ArrowUp, ChevronUp, ArrowDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { supabase, getCurrentUser, updateUserPoints } from '@/lib/supabase';
+import { sendDailySummaryEmail } from '@/utils/emailService';
 
 const Index = () => {
   const [tasks, setTasks] = useState<Task[]>(() => {
@@ -40,15 +42,30 @@ const Index = () => {
   const [showRankUpAnimation, setShowRankUpAnimation] = useState(false);
   const [showRankDownAnimation, setShowRankDownAnimation] = useState(false);
   const [rankChangeMessage, setRankChangeMessage] = useState('');
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [lastEmailSent, setLastEmailSent] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
   
   // Check if user is logged in
   useEffect(() => {
-    const email = localStorage.getItem('userEmail');
-    if (!email) {
-      navigate('/login');
-    }
+    const checkAuth = async () => {
+      const user = await getCurrentUser();
+      if (user) {
+        setUserId(user.id);
+        setUserEmail(user.email);
+      } else {
+        const email = localStorage.getItem('userEmail');
+        if (!email) {
+          navigate('/login');
+        } else {
+          setUserEmail(email);
+        }
+      }
+    };
+    
+    checkAuth();
   }, [navigate]);
   
   // Save tasks and points to localStorage when they change
@@ -58,18 +75,57 @@ const Index = () => {
   
   useEffect(() => {
     localStorage.setItem('points', points.toString());
-  }, [points]);
+    // Also update points in Supabase if we have a user ID
+    if (userId) {
+      updateUserPoints(points);
+    }
+  }, [points, userId]);
   
-  // Implement daily task reset
+  // Implement daily task reset with email summary
   useEffect(() => {
     // Check for task reset once on load and then every hour
-    const checkTaskReset = () => resetCompletedTasks(tasks, setTasks);
+    const checkTaskReset = async () => {
+      // Get the date of last reset
+      const lastReset = localStorage.getItem('lastTaskReset');
+      const now = new Date();
+      const today = now.toISOString().split('T')[0]; // YYYY-MM-DD format
+      
+      // If we haven't reset today
+      if (lastReset !== today) {
+        // If there were completed tasks, send email summary before reset
+        const completedTasks = tasks.filter(task => task.completed);
+        if (completedTasks.length > 0 && userEmail && userId) {
+          // Check if we already sent an email today
+          const today = new Date().toISOString().split('T')[0];
+          if (lastEmailSent !== today) {
+            await sendDailySummaryEmail(userId, userEmail, tasks, points);
+            setLastEmailSent(today);
+            localStorage.setItem('lastEmailSent', today);
+          }
+        }
+        
+        // Then reset the tasks
+        resetCompletedTasks(tasks, setTasks);
+        
+        // Update the last reset date
+        localStorage.setItem('lastTaskReset', today);
+      }
+    };
     
+    // Load last email sent date from localStorage
+    const loadLastEmailSent = () => {
+      const saved = localStorage.getItem('lastEmailSent');
+      if (saved) {
+        setLastEmailSent(saved);
+      }
+    };
+    
+    loadLastEmailSent();
     checkTaskReset(); // Check immediately on component mount
     
     const interval = setInterval(checkTaskReset, 60 * 60 * 1000); // Check every hour
     return () => clearInterval(interval);
-  }, [tasks, setTasks]);
+  }, [tasks, setTasks, userId, userEmail, points]);
   
   const handleAddPoints = (pointsToAdd: number) => {
     const oldPoints = points;
@@ -175,6 +231,11 @@ const Index = () => {
         <p className="text-solo-gray mt-2 max-w-md mx-auto">
           Complete tasks. Earn points. Level up your rank. Arise.
         </p>
+        {userEmail && (
+          <p className="text-sm text-solo-purple mt-2">
+            Signed in as: {userEmail}
+          </p>
+        )}
       </header>
       
       <div className="container px-4 mx-auto max-w-4xl">
