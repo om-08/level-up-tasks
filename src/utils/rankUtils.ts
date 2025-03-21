@@ -53,11 +53,26 @@ export const getRankUpMessage = (rank: Rank): string => {
   return `Congratulations! You've been promoted to ${rank.name}!`;
 };
 
+export const getRankDownMessage = (rank: Rank): string => {
+  return `You have been demoted to ${rank.name}. Keep completing tasks to rise again!`;
+};
+
 export const checkRankUp = (oldPoints: number, newPoints: number): Rank | null => {
   const oldRank = getCurrentRank(oldPoints);
   const newRank = getCurrentRank(newPoints);
   
   if (newRank.name !== oldRank.name) {
+    return newRank;
+  }
+  
+  return null;
+};
+
+export const checkRankDown = (oldPoints: number, newPoints: number): Rank | null => {
+  const oldRank = getCurrentRank(oldPoints);
+  const newRank = getCurrentRank(newPoints);
+  
+  if (newRank.name !== oldRank.name && newPoints < oldPoints) {
     return newRank;
   }
   

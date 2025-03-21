@@ -1,8 +1,9 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Task as TaskType, toggleTaskCompletion, CATEGORIES } from '@/utils/taskUtils';
-import { CheckCircle, Circle, Trash2, AlignLeft, Award, Star } from 'lucide-react';
+import { CheckCircle, Circle, Trash2, AlignLeft, Award, Star, Lock, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { format, formatDistanceToNow } from 'date-fns';
 
 interface TaskProps {
   task: TaskType;
@@ -15,7 +16,31 @@ interface TaskProps {
 const Task = ({ task, tasks, setTasks, onComplete, onDelete }: TaskProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showCompletionEffect, setShowCompletionEffect] = useState(false);
+  const [isLocked, setIsLocked] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState<string>('');
   const taskRef = useRef<HTMLDivElement>(null);
+  
+  // Check if task is locked due to time restriction
+  useEffect(() => {
+    const checkLockStatus = () => {
+      if (task.completableAfter && !task.completed) {
+        const now = new Date();
+        const isCurrentlyLocked = now < task.completableAfter;
+        setIsLocked(isCurrentlyLocked);
+        
+        if (isCurrentlyLocked) {
+          setTimeRemaining(formatDistanceToNow(task.completableAfter, { addSuffix: true }));
+        }
+      } else {
+        setIsLocked(false);
+      }
+    };
+    
+    checkLockStatus();
+    const interval = setInterval(checkLockStatus, 60000); // Update every minute
+    
+    return () => clearInterval(interval);
+  }, [task]);
   
   // Function to create particles
   const createParticles = () => {
@@ -122,6 +147,10 @@ const Task = ({ task, tasks, setTasks, onComplete, onDelete }: TaskProps) => {
   };
   
   const handleToggle = () => {
+    if (isLocked) {
+      return; // Prevent completion if locked
+    }
+    
     if (!task.completed) {
       // Only show effects when completing a task, not when uncompleting
       setShowCompletionEffect(true);
@@ -157,10 +186,18 @@ const Task = ({ task, tasks, setTasks, onComplete, onDelete }: TaskProps) => {
         "task-card cursor-pointer animate-enter mb-4 group relative overflow-hidden",
         task.completed ? "border-solo-purple/30 opacity-80" : "",
         showCompletionEffect ? "border-solo-purple shadow-blue-glow" : "",
-        task.isChallenge ? "border-l-4 border-l-solo-purple" : ""
+        task.isChallenge ? "border-l-4 border-l-solo-purple" : "",
+        isLocked ? "border-amber-500/50" : ""
       )}
       onClick={handleToggle}
     >
+      {isLocked && (
+        <div className="absolute top-2 right-2 flex items-center gap-1 text-amber-400 text-xs bg-black/30 px-2 py-1 rounded-full">
+          <Lock className="h-3 w-3" />
+          <span>Unlocks {timeRemaining}</span>
+        </div>
+      )}
+      
       {showCompletionEffect && (
         <div className="absolute inset-0 bg-solo-purple/10 animate-pulse-blue z-0"></div>
       )}
@@ -183,6 +220,8 @@ const Task = ({ task, tasks, setTasks, onComplete, onDelete }: TaskProps) => {
               "h-6 w-6 text-solo-purple transition-all duration-300",
               showCompletionEffect ? "scale-125 animate-success-pulse" : ""
             )} />
+          ) : isLocked ? (
+            <Clock className="h-6 w-6 text-amber-400 transition-all duration-300" />
           ) : (
             <Circle className="h-6 w-6 text-solo-gray group-hover:text-solo-purple transition-all duration-300" />
           )}

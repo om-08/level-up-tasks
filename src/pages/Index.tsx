@@ -1,13 +1,15 @@
+
 import { useState, useEffect } from 'react';
 import RankDisplay from '@/components/RankDisplay';
 import TaskList from '@/components/TaskList';
 import AddTaskForm from '@/components/AddTaskForm';
 import TaskProgress from '@/components/TaskProgress';
 import ChallengeList from '@/components/ChallengeList';
-import { Task, deleteTask } from '@/utils/taskUtils';
-import { checkRankUp, getRankUpMessage } from '@/utils/rankUtils';
+import { Task, deleteTask, resetCompletedTasks } from '@/utils/taskUtils';
+import { checkRankUp, getRankUpMessage, checkRankDown, getRankDownMessage } from '@/utils/rankUtils';
 import { useToast } from '@/components/ui/use-toast';
-import { ArrowUp, ChevronUp } from 'lucide-react';
+import { ArrowUp, ChevronUp, ArrowDown } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Index = () => {
   const [tasks, setTasks] = useState<Task[]>(() => {
@@ -16,7 +18,7 @@ const Index = () => {
       try {
         // Convert date strings back to Date objects
         return JSON.parse(savedTasks, (key, value) => {
-          if (key === 'createdAt' || key === 'completedAt') {
+          if (key === 'createdAt' || key === 'completedAt' || key === 'completableAfter') {
             return value ? new Date(value) : undefined;
           }
           return value;
@@ -36,7 +38,18 @@ const Index = () => {
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [showRankUpAnimation, setShowRankUpAnimation] = useState(false);
+  const [showRankDownAnimation, setShowRankDownAnimation] = useState(false);
+  const [rankChangeMessage, setRankChangeMessage] = useState('');
   const { toast } = useToast();
+  const navigate = useNavigate();
+  
+  // Check if user is logged in
+  useEffect(() => {
+    const email = localStorage.getItem('userEmail');
+    if (!email) {
+      navigate('/login');
+    }
+  }, [navigate]);
   
   // Save tasks and points to localStorage when they change
   useEffect(() => {
@@ -47,20 +60,46 @@ const Index = () => {
     localStorage.setItem('points', points.toString());
   }, [points]);
   
+  // Implement daily task reset
+  useEffect(() => {
+    // Check for task reset once on load and then every hour
+    const checkTaskReset = () => resetCompletedTasks(tasks, setTasks);
+    
+    checkTaskReset(); // Check immediately on component mount
+    
+    const interval = setInterval(checkTaskReset, 60 * 60 * 1000); // Check every hour
+    return () => clearInterval(interval);
+  }, [tasks, setTasks]);
+  
   const handleAddPoints = (pointsToAdd: number) => {
     const oldPoints = points;
     const newPoints = Math.max(0, points + pointsToAdd); // Prevent negative points
     setPoints(newPoints);
     
     // Check for rank up
-    const newRank = checkRankUp(oldPoints, newPoints);
-    if (newRank) {
+    const newRankUp = checkRankUp(oldPoints, newPoints);
+    if (newRankUp) {
+      setRankChangeMessage(getRankUpMessage(newRankUp));
       setShowRankUpAnimation(true);
       setTimeout(() => setShowRankUpAnimation(false), 5000);
       
       toast({
         title: "Rank Up!",
-        description: getRankUpMessage(newRank),
+        description: getRankUpMessage(newRankUp),
+      });
+    }
+    
+    // Check for rank down
+    const newRankDown = checkRankDown(oldPoints, newPoints);
+    if (newRankDown) {
+      setRankChangeMessage(getRankDownMessage(newRankDown));
+      setShowRankDownAnimation(true);
+      setTimeout(() => setShowRankDownAnimation(false), 5000);
+      
+      toast({
+        title: "Rank Decreased",
+        description: getRankDownMessage(newRankDown),
+        variant: "destructive"
       });
     }
   };
@@ -99,10 +138,29 @@ const Index = () => {
             <div className="flex justify-center animate-levitate">
               <ArrowUp className="h-24 w-24 text-solo-purple animate-pulse-blue" />
             </div>
-            <div className="mt-4 text-2xl text-white">You've reached a new rank!</div>
+            <div className="mt-4 text-2xl text-white">{rankChangeMessage}</div>
             <button 
               onClick={() => setShowRankUpAnimation(false)}
               className="mt-8 px-6 py-3 bg-gradient-purple rounded-lg text-white hover:opacity-90 transition-opacity"
+            >
+              Continue
+            </button>
+          </div>
+        </div>
+      )}
+      
+      {/* Rank Down Animation */}
+      {showRankDownAnimation && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/70 backdrop-blur-sm animate-fade-in">
+          <div className="text-center animate-scale-in">
+            <div className="text-6xl font-bold text-red-500 mb-4 animate-pulse">Rank Decreased</div>
+            <div className="flex justify-center animate-levitate">
+              <ArrowDown className="h-24 w-24 text-red-500 animate-pulse" />
+            </div>
+            <div className="mt-4 text-2xl text-white">{rankChangeMessage}</div>
+            <button 
+              onClick={() => setShowRankDownAnimation(false)}
+              className="mt-8 px-6 py-3 bg-gradient-to-r from-red-600 to-red-500 rounded-lg text-white hover:opacity-90 transition-opacity"
             >
               Continue
             </button>
