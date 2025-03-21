@@ -1,7 +1,7 @@
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Task as TaskType, toggleTaskCompletion, CATEGORIES } from '@/utils/taskUtils';
-import { CheckCircle, Circle, Trash2, AlignLeft, Award } from 'lucide-react';
+import { CheckCircle, Circle, Trash2, AlignLeft, Award, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface TaskProps {
@@ -15,12 +15,123 @@ interface TaskProps {
 const Task = ({ task, tasks, setTasks, onComplete, onDelete }: TaskProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showCompletionEffect, setShowCompletionEffect] = useState(false);
+  const taskRef = useRef<HTMLDivElement>(null);
+  
+  // Function to create particles
+  const createParticles = () => {
+    if (!taskRef.current) return;
+    
+    const taskElement = taskRef.current;
+    const rect = taskElement.getBoundingClientRect();
+    
+    // Create multiple particles
+    for (let i = 0; i < 15; i++) {
+      const particle = document.createElement('div');
+      
+      // Random position within the task card
+      const x = Math.random() * rect.width;
+      const y = Math.random() * rect.height;
+      
+      // Randomize the particle appearance
+      const size = Math.random() * 8 + 4; // 4-12px
+      const color = i % 3 === 0 ? '#ffcc00' : i % 2 === 0 ? '#9b87f5' : '#ffffff';
+      
+      // Set particle styles
+      particle.className = 'completion-particles';
+      particle.style.position = 'absolute';
+      particle.style.left = `${x}px`;
+      particle.style.top = `${y}px`;
+      particle.style.width = `${size}px`;
+      particle.style.height = `${size}px`;
+      particle.style.backgroundColor = color;
+      
+      // Set the direction the particle will move (x and y variables for the CSS animation)
+      const animX = (Math.random() - 0.5) * 80;
+      const animY = (Math.random() - 0.8) * 80; // more upward than downward
+      particle.style.setProperty('--x', `${animX}px`);
+      particle.style.setProperty('--y', `${animY}px`);
+      
+      // Add to DOM and remove after animation
+      taskElement.appendChild(particle);
+      setTimeout(() => {
+        if (taskElement.contains(particle)) {
+          taskElement.removeChild(particle);
+        }
+      }, 800);
+    }
+  };
+  
+  // Function to create a burst effect
+  const createBurst = () => {
+    if (!taskRef.current) return;
+    
+    const burst = document.createElement('div');
+    burst.className = 'absolute inset-0 animate-burst';
+    taskRef.current.appendChild(burst);
+    
+    setTimeout(() => {
+      if (taskRef.current && taskRef.current.contains(burst)) {
+        taskRef.current.removeChild(burst);
+      }
+    }, 700);
+  };
+  
+  // Create star effect
+  const createStars = () => {
+    if (!taskRef.current) return;
+    
+    const taskElement = taskRef.current;
+    const rect = taskElement.getBoundingClientRect();
+    
+    // Add stars
+    for (let i = 0; i < 5; i++) {
+      const star = document.createElement('div');
+      
+      // Position stars around the checkmark
+      const angle = (Math.PI * 2 / 5) * i;
+      const distance = 30 + Math.random() * 20;
+      const x = rect.width / 3 + Math.cos(angle) * distance;
+      const y = rect.height / 2 + Math.sin(angle) * distance;
+      
+      // Star styling
+      star.className = 'absolute animate-star';
+      star.style.left = `${x}px`;
+      star.style.top = `${y}px`;
+      star.style.opacity = '0';
+      star.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${
+        i % 2 === 0 ? '#ffcc00' : '#9b87f5'
+      }" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+      
+      // Add star with delay for sequence effect
+      setTimeout(() => {
+        taskElement.appendChild(star);
+        // Animate in
+        setTimeout(() => {
+          star.style.opacity = '1';
+          star.style.transform = 'scale(1.2)';
+        }, 50);
+        
+        // Remove after animation
+        setTimeout(() => {
+          if (taskElement.contains(star)) {
+            taskElement.removeChild(star);
+          }
+        }, 1000);
+      }, i * 100);
+    }
+  };
   
   const handleToggle = () => {
     if (!task.completed) {
       // Only show effects when completing a task, not when uncompleting
       setShowCompletionEffect(true);
-      setTimeout(() => setShowCompletionEffect(false), 1000);
+      
+      // Trigger various completion animations
+      createParticles();
+      createBurst();
+      createStars();
+      
+      setTimeout(() => setShowCompletionEffect(false), 1500);
     }
     
     const pointsChange = toggleTaskCompletion(task, tasks, setTasks);
@@ -41,9 +152,10 @@ const Task = ({ task, tasks, setTasks, onComplete, onDelete }: TaskProps) => {
   
   return (
     <div 
+      ref={taskRef}
       className={cn(
         "task-card cursor-pointer animate-enter mb-4 group relative overflow-hidden",
-        task.completed ? "border-solo-purple/30 opacity-70" : "",
+        task.completed ? "border-solo-purple/30 opacity-80" : "",
         showCompletionEffect ? "border-solo-purple shadow-blue-glow" : "",
         task.isChallenge ? "border-l-4 border-l-solo-purple" : ""
       )}
@@ -65,11 +177,11 @@ const Task = ({ task, tasks, setTasks, onComplete, onDelete }: TaskProps) => {
       )}
       
       <div className={cn("flex items-center relative z-20")}>
-        <div className="flex-shrink-0 mr-3">
+        <div className="flex-shrink-0 mr-3 relative">
           {task.completed ? (
             <CheckCircle className={cn(
               "h-6 w-6 text-solo-purple transition-all duration-300",
-              showCompletionEffect ? "scale-125" : ""
+              showCompletionEffect ? "scale-125 animate-success-pulse" : ""
             )} />
           ) : (
             <Circle className="h-6 w-6 text-solo-gray group-hover:text-solo-purple transition-all duration-300" />
