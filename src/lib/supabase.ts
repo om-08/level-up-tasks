@@ -1,9 +1,10 @@
+
 import { createClient } from '@supabase/supabase-js';
 
 // Supabase project details
 const supabaseUrl = 'https://apzazfengfojohyqyldq.supabase.co';
-// Replace this with your actual anon/public key from the Supabase dashboard
-const supabaseAnonKey = 'your-anon-key'; // You need to replace this with your actual public/anon key
+// Using the actual anon/public key from the Supabase dashboard
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFwemF6ZmVuZ2Zvam9oeXF5bGRxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI1OTEzODUsImV4cCI6MjA1ODE2NzM4NX0.iLEVI2Fsjd2eFhXT0iZplHdHkc48A82m1q_CF7QkU0Q';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
