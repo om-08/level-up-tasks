@@ -1,4 +1,3 @@
-
 import { useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Input } from "@/components/ui/input";
@@ -40,7 +39,8 @@ const Login = () => {
           options: {
             data: {
               points: 0 // Initialize user with 0 points
-            }
+            },
+             redirectTo : https://level-up-tasks.lovable.app/
           }
         });
 
@@ -90,7 +90,7 @@ const Login = () => {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`
+          redirectTo: ${window.location.origin}/auth/callback
         }
       });
       
@@ -99,7 +99,7 @@ const Login = () => {
     } catch (error: any) {
       toast({
         title: "Authentication Error",
-        description: error.message || `Failed to authenticate with ${provider}`,
+        description: error.message || Failed to authenticate with ${provider},
         variant: "destructive",
       });
       setIsLoading(false);
@@ -237,4 +237,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Login;
