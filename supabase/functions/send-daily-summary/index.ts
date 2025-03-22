@@ -29,7 +29,6 @@ interface EmailSummary {
   date: string;
   stats: Stats;
   categories: Category[];
-  senderEmail?: string; // Add optional senderEmail field
 }
 
 serve(async (req) => {
@@ -41,10 +40,7 @@ serve(async (req) => {
   const smtpPort = Deno.env.get("SMTP_PORT") ? parseInt(Deno.env.get("SMTP_PORT") || "") : 587;
   const smtpUser = Deno.env.get("SMTP_USER") || "";
   const smtpPassword = Deno.env.get("SMTP_PASSWORD") || "";
-  const defaultSenderEmail = Deno.env.get("SENDER_EMAIL") || "noreply@shadowtaskmanager.com";
-  
-  // Use provided sender email or fall back to the default
-  const senderEmail = summary.senderEmail || defaultSenderEmail;
+  const senderEmail = Deno.env.get("SENDER_EMAIL") || "noreply@shadowtaskmanager.com";
   
   try {
     const client = new SmtpClient();

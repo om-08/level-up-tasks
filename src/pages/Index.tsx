@@ -47,18 +47,6 @@ const Index = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   
-  // Add custom sender email state
-  const [customSenderEmail, setCustomSenderEmail] = useState<string>(
-    localStorage.getItem('customSenderEmail') || ''
-  );
-  
-  // Save custom sender email to localStorage when it changes
-  useEffect(() => {
-    if (customSenderEmail) {
-      localStorage.setItem('customSenderEmail', customSenderEmail);
-    }
-  }, [customSenderEmail]);
-  
   // Check if user is logged in
   useEffect(() => {
     const checkAuth = async () => {
@@ -113,8 +101,7 @@ const Index = () => {
               userId, 
               userEmail, 
               tasks, 
-              points, 
-              customSenderEmail || undefined // Pass the custom sender email if set
+              points
             );
             setLastEmailSent(today);
             localStorage.setItem('lastEmailSent', today);
@@ -142,7 +129,7 @@ const Index = () => {
     
     const interval = setInterval(checkTaskReset, 60 * 60 * 1000); // Check every hour
     return () => clearInterval(interval);
-  }, [tasks, setTasks, userId, userEmail, points, customSenderEmail]);
+  }, [tasks, setTasks, userId, userEmail, points]);
   
   const handleAddPoints = (pointsToAdd: number) => {
     const oldPoints = points;
@@ -257,45 +244,6 @@ const Index = () => {
       
       <div className="container px-4 mx-auto max-w-4xl">
         <RankDisplay points={points} />
-        
-        {/* Add custom sender email input */}
-        <div className="mb-6 bg-solo-dark-light p-4 rounded-lg shadow-md">
-          <label htmlFor="senderEmail" className="block text-sm font-medium text-solo-gray mb-2">
-            Custom Sender Email (optional):
-          </label>
-          <div className="flex">
-            <input
-              type="email"
-              id="senderEmail"
-              value={customSenderEmail}
-              onChange={(e) => setCustomSenderEmail(e.target.value)}
-              placeholder="your-email@example.com"
-              className="flex-1 bg-solo-dark-lighter border border-solo-purple/30 rounded px-3 py-2 text-white placeholder:text-solo-gray/50 focus:outline-none focus:ring-2 focus:ring-solo-purple/50"
-            />
-            <button
-              className="ml-2 px-3 py-2 bg-solo-purple rounded text-white hover:bg-solo-purple-dark transition-colors text-sm"
-              onClick={() => {
-                if (customSenderEmail) {
-                  toast({
-                    title: "Sender Email Saved",
-                    description: `Daily summaries will be sent from: ${customSenderEmail}`,
-                  });
-                } else {
-                  localStorage.removeItem('customSenderEmail');
-                  toast({
-                    title: "Sender Email Cleared",
-                    description: "Default sender email will be used",
-                  });
-                }
-              }}
-            >
-              Save
-            </button>
-          </div>
-          <p className="text-xs text-solo-gray mt-1">
-            If left empty, the default sender email will be used
-          </p>
-        </div>
         
         <TaskProgress tasks={tasks} />
         

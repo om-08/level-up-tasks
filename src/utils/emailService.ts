@@ -7,8 +7,7 @@ export const sendDailySummaryEmail = async (
   userId: string, 
   email: string,
   tasks: Task[],
-  points: number,
-  senderEmail?: string // Add optional parameter for sender email
+  points: number
 ) => {
   // Count completed tasks
   const completedTasks = tasks.filter(task => task.completed);
@@ -52,9 +51,7 @@ export const sendDailySummaryEmail = async (
         total,
         completionRate: total > 0 ? Math.round((completed / total) * 100) : 0
       };
-    }),
-    // Include the custom sender email if provided
-    senderEmail: senderEmail
+    })
   };
   
   try {
