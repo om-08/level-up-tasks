@@ -40,7 +40,7 @@ const Login = () => {
             data: {
               points: 0 // Initialize user with 0 points
             },
-             redirectTo : https://level-up-tasks.lovable.app/
+             redirectTo :  ${window.location.origin}/auth/callback
           }
         });
 
