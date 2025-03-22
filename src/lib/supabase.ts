@@ -1,10 +1,9 @@
-
 import { createClient } from '@supabase/supabase-js';
 
-// Replace these with your actual Supabase project details
-// You can find these in your Supabase dashboard under Settings > API
-const supabaseUrl = 'https://your-supabase-project.supabase.co';
-const supabaseAnonKey = 'your-anon-key';
+// Supabase project details
+const supabaseUrl = 'https://apzazfengfojohyqyldq.supabase.co';
+// Replace this with your actual anon/public key from the Supabase dashboard
+const supabaseAnonKey = 'your-anon-key'; // You need to replace this with your actual public/anon key
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
