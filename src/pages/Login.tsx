@@ -3,7 +3,7 @@ import { useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Mail, Lock, Github, Linkedin } from 'lucide-react';
+import { Mail, Lock, Linkedin } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabase';
 import { Separator } from '@/components/ui/separator';
@@ -88,14 +88,20 @@ const Login = () => {
     try {
       setIsLoading(true);
       
+      // Add specific scopes for LinkedIn to get email address
+      const scopes = provider === 'linkedin' ? ['email', 'profile'] : undefined;
+      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`
+          redirectTo: `${window.location.origin}/auth/callback`,
+          scopes: scopes
         }
       });
       
       if (error) throw error;
+      
+      // No need for additional toast here as the page will redirect to the OAuth provider
       
     } catch (error: any) {
       toast({

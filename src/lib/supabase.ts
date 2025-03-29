@@ -46,3 +46,14 @@ export const updateUserPoints = async (points: number) => {
     console.error('Error updating user points:', error);
   }
 };
+
+// Listen for auth state changes
+export const setupAuthListener = (callback: (session: any) => void) => {
+  const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    (_event, session) => {
+      callback(session);
+    }
+  );
+  
+  return subscription;
+};
